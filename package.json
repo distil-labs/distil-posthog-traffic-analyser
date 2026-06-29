@@ -1,0 +1,33 @@
+{
+  "name": "slm-feedback-harness",
+  "version": "0.1.0",
+  "description": "SLM+LLM product feedback loop: PostHog -> narration -> bugs -> PRs",
+  "type": "module",
+  "module": "src/index.ts",
+  "scripts": {
+    "smoke": "bun run scripts/smoke.ts",
+    "demo": "bun run scripts/demo.ts",
+    "ingest": "bun run scripts/ingest.ts",
+    "narrate": "bun run scripts/narrate.ts",
+    "extract": "bun run scripts/extract.ts",
+    "prioritize": "bun run scripts/prioritize.ts",
+    "report": "bun run scripts/report.ts",
+    "dashboard": "bun run scripts/dashboard.ts",
+    "eval": "bun run scripts/eval.ts",
+    "collect-training": "bun run scripts/collect_training.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "format": "bunx prettier -w ."
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.104.2",
+    "ollama": "^0.6.3",
+    "openai": "^6.43.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "prettier": "^3.8.4",
+    "typescript": "^5.9.0"
+  }
+}

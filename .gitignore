@@ -216,3 +216,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Harness runtime data: findings DB, ingested sessions, narration cache,
+# cost log, generated training pairs, and the ephemeral collect-training
+# bootstrap DB. Committed seed data lives under examples/seeds/ instead.
+/data/
+node_modules/
+*.db
+*.db-wal
+*.db-shm

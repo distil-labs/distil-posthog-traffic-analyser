@@ -1,8 +1,7 @@
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { extractFromNarration } from "../src/agents/extractor.ts";
-import { LLMClient } from "../src/integrations/llm.ts";
-import { SLMClient } from "../src/integrations/slm.ts";
+import { buildEngine, getTool } from "../src/tools/registry.ts";
 import { getSettings } from "../src/util/config.ts";
 import { registerCostFlush, tracker } from "../src/util/cost.ts";
 import { getLogger } from "../src/util/log.ts";
@@ -105,8 +104,12 @@ if (lines.length === 0) {
 const sample = lines.slice(0, args.sample);
 log.info("starting", { sample: sample.length });
 
-const slm = new SLMClient();
-const llm = new LLMClient();
+// Build both engines for the extractor tool so the eval respects the pinned
+// distilled model (TOOL_EXTRACTOR_MODEL) on the SLM side and LLM_PROVIDER on
+// the teacher side.
+const extractorTool = getTool("extractor");
+const slm = buildEngine("slm", extractorTool);
+const llm = buildEngine("llm", extractorTool);
 
 interface Row {
   sessionId: string;

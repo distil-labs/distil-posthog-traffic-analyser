@@ -1,5 +1,5 @@
 {
-  "name": "slm-feedback-harness",
+  "name": "distil-posthog-traffic-analyser",
   "version": "0.1.0",
   "description": "SLM+LLM product feedback loop: PostHog -> narration -> bugs -> PRs",
   "type": "module",
@@ -15,6 +15,7 @@
     "dashboard": "bun run scripts/dashboard.ts",
     "eval": "bun run scripts/eval.ts",
     "collect-training": "bun run scripts/collect_training.ts",
+    "build-seeds": "bun run scripts/build_seeds.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "format": "bunx prettier -w ."

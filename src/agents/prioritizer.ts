@@ -54,6 +54,7 @@ export interface PrioritizerResult {
   missingIds: string[];
   unknownIds: string[];
   duplicateIds: string[];
+  ok: boolean;
 }
 
 function validateCoverage(
@@ -99,6 +100,7 @@ export async function prioritize(
       missingIds: items.map((i) => i.id),
       unknownIds: [],
       duplicateIds: [],
+      ok: false,
     };
   }
   const validated = PrioritizerOutputSchema.safeParse(parsedJson);
@@ -111,6 +113,7 @@ export async function prioritize(
       missingIds: items.map((i) => i.id),
       unknownIds: [],
       duplicateIds: [],
+      ok: false,
     };
   }
   const ranked = validated.data.ranked;
@@ -126,5 +129,6 @@ export async function prioritize(
     missingIds: cov.missing,
     unknownIds: cov.unknown,
     duplicateIds: cov.duplicates,
+    ok: true,
   };
 }

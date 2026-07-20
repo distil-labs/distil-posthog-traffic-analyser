@@ -131,8 +131,8 @@ describe("resolveSLMModel", () => {
 
   test("per-tool model override read from env", () => {
     const narrator = getTool("narrator");
-    process.env[narrator.envModelKey!] = "distil-labs/feedback-narrator-v1";
-    expect(resolveSLMModel(narrator)).toBe("distil-labs/feedback-narrator-v1");
+    process.env[narrator.envModelKey!] = "my-distilled-narrator";
+    expect(resolveSLMModel(narrator)).toBe("my-distilled-narrator");
   });
 
   test("empty env value treated as undefined", () => {

@@ -35,7 +35,7 @@ export function cleanJsonOutput(raw: string): string {
 export async function extractFromNarration(
   engine: Completer,
   narration: string,
-): Promise<{ findings: RawFinding[]; raw: string; inputTokens: number; outputTokens: number }> {
+): Promise<{ findings: RawFinding[]; raw: string; inputTokens: number; outputTokens: number; ok: boolean }> {
   const r = await engine.complete(buildExtractorPrompt(narration), {
     system: EXTRACTOR_SYSTEM,
     agent: "extractor",
@@ -47,16 +47,20 @@ export async function extractFromNarration(
   try {
     parsedJson = JSON.parse(cleaned);
   } catch {
-    return { findings: [], raw: r.text, inputTokens: r.inputTokens, outputTokens: r.outputTokens };
+    // Parse failure: not a real "no findings" result. `ok: false` so callers
+    // (e.g. training-data collection) can skip it instead of recording an
+    // empty-label pair.
+    return { findings: [], raw: r.text, inputTokens: r.inputTokens, outputTokens: r.outputTokens, ok: false };
   }
   const validated = ExtractorOutputSchema.safeParse(parsedJson);
   if (!validated.success) {
-    return { findings: [], raw: r.text, inputTokens: r.inputTokens, outputTokens: r.outputTokens };
+    return { findings: [], raw: r.text, inputTokens: r.inputTokens, outputTokens: r.outputTokens, ok: false };
   }
   return {
     findings: validated.data.findings,
     raw: r.text,
     inputTokens: r.inputTokens,
     outputTokens: r.outputTokens,
+    ok: true,
   };
 }

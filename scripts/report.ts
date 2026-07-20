@@ -56,7 +56,7 @@ const rd = rankedPerDay(findings);
 const top = findings.slice(0, args.topN);
 
 const out: string[] = [];
-out.push(`# SLM Feedback Harness — Report`);
+out.push(`# Distil PostHog Traffic Analyser — Report`);
 out.push(`Generated: ${new Date().toISOString()}`);
 out.push(``);
 out.push(`## Summary`);

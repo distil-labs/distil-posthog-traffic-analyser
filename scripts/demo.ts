@@ -1,16 +1,19 @@
 /**
  * End-to-end demo on bundled sample sessions.
  *
- * The intelligent harness has three engines per tool: `distil` (Distil
- * Labs production model), `slm` (Ollama / OpenAI-compatible local
- * runtime), and `llm` (Anthropic Opus / OpenAI GPT-5 teacher).
+ * Each tool runs on one of two engines: `slm` (your Distil-trained model,
+ * or a generic small model on Ollama / an OpenAI-compatible runtime) and
+ * `llm` (Anthropic Opus / OpenAI GPT-5 teacher).
  *
- * No Distil Labs URLs are configured yet, so the resolver's natural
- * fallback would be `slm` (which needs Ollama running). For a one-key
- * reviewer demo we force `--engine llm` so the entire pipeline runs on
- * the cloud LLM (Claude Opus by default, or OpenAI if LLM_PROVIDER=
- * openai). `bun run demo --engine slm` opts into the SLM fallback if
- * you have Ollama up.
+ * The SLM engine is the point of this repo, so it is the default. Pin your
+ * Distil-trained weights per tool with TOOL_<NAME>_MODEL, or `ollama pull`
+ * a generic small model to see the loop before you distill. No frontier
+ * API key is required on this path.
+ *
+ * `bun run demo --engine llm` is the optional teacher path: it runs the
+ * whole pipeline on a frontier model (Claude Opus by default, or OpenAI if
+ * LLM_PROVIDER=openai). Use it to watch the teacher that generates training
+ * data, or as a no-local-model fallback. It needs an API key.
  *
  * Stages run in-process (no subprocess spawning) so a single transcript
  * is easy to follow.
@@ -46,7 +49,7 @@ function parseArgs(argv: string[]): Args {
       }
     }
   }
-  let engine: Engine = "llm";
+  let engine: Engine = "slm";
   if (opts.engine === "slm" || opts.engine === "llm") {
     engine = opts.engine as Engine;
   }
@@ -87,24 +90,33 @@ const sessions = await loadSessions();
 
 const engineNote =
   args.engine === "llm"
-    ? `engine=llm (cloud teacher: provider=${s.LLM_PROVIDER})`
+    ? `engine=llm (frontier teacher: provider=${s.LLM_PROVIDER})`
     : `engine=slm (local: provider=${s.SLM_PROVIDER})`;
 console.log(`\n=== DEMO MODE — ${sessions.length} sample sessions, ${engineNote} ===`);
-console.log(
-  `Note: distillable tools default to "slm". This demo forces --engine llm so a reviewer can`,
-);
-console.log(
-  `      run the loop with one Anthropic/OpenAI key, no local model required. Run`,
-);
-console.log(
-  `      "bun run demo --engine slm" if you have Ollama (or any OpenAI-compatible runtime)`,
-);
-console.log(
-  `      to see the SLM path. After Distil Labs ships a fine-tune for a tool, deploy it on`,
-);
-console.log(
-  `      your runtime and set TOOL_<NAME>_MODEL=<distilled-weights-name> — no code change.\n`,
-);
+if (args.engine === "slm") {
+  console.log(
+    `Running on the SLM engine. Pin your Distil-trained models per tool with`,
+  );
+  console.log(
+    `      TOOL_<NAME>_MODEL=<your-model>, or "ollama pull ${s.OLLAMA_MODEL}" for a generic`,
+  );
+  console.log(
+    `      placeholder to see the loop before you distill. No frontier API key needed.`,
+  );
+  console.log(
+    `      Optional: "bun run demo --engine llm" runs the frontier teacher instead (needs a key).\n`,
+  );
+} else {
+  console.log(
+    `Running the optional frontier teacher path (provider=${s.LLM_PROVIDER}). This is the`,
+  );
+  console.log(
+    `      model that generates training data, not the production path. The SLM engine`,
+  );
+  console.log(
+    `      ("bun run demo", or "--engine slm") is the one you run in production.\n`,
+  );
+}
 
 console.log(`-- Stage 1: narrate (${sessions.length} sessions)`);
 const cache = new SessionCache(cachePath);
@@ -133,8 +145,15 @@ const allNarrations = await readFile(cachePath, "utf8")
   .catch(() => []);
 
 const db = new FindingsDB();
+// Skip sessions already extracted so reruns don't duplicate findings.
+const alreadyExtracted = new Set(db.list().flatMap((f) => f.sessionIds));
 let totalFindings = 0;
+let skipped = 0;
 for (const n of allNarrations) {
+  if (alreadyExtracted.has(n.sessionId)) {
+    skipped++;
+    continue;
+  }
   const r = await dispatchExtractor(n.narration, args.engine);
   totalFindings += r.output.findings.length;
   for (const f of r.output.findings) {
@@ -142,6 +161,7 @@ for (const n of allNarrations) {
     console.log(`  [${f.kind} sev=${f.severity}] ${f.title}`);
   }
 }
+if (skipped > 0) console.log(`  (skipped ${skipped} sessions already in the findings DB)`);
 console.log(`  Extracted ${totalFindings} findings (dedup skipped in demo for clarity).`);
 
 console.log(`\n-- Stage 3: prioritize`);

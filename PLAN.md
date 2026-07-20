@@ -1,4 +1,12 @@
-# SLM+LLM Product Feedback Harness — Plan
+# Distil PostHog Traffic Analyser — Plan
+
+> **Status note (historical planning doc).** The shipped repo is scoped to the
+> three analysis tools — `narrator`, `extractor`, `prioritizer` — and their
+> distillation handoff. The downstream automation phases below (issue_writer,
+> coder, `github.ts`, `slack.ts`, `run.ts`) were intentionally cut and are
+> **not** in the codebase; the LinkedIn writeup's GitHub/PR agents live
+> downstream of this repo as application code. Treat phases describing those as
+> future/removed, not as delivered. See `README.md` for the actual shipped scope.
 
 Pipeline: PostHog events → narration → bug/gap extraction → prioritization → GitHub issues → code PRs. Humans gate prod.
 

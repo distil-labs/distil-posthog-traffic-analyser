@@ -1,7 +1,7 @@
 services:
   ollama:
     image: ollama/ollama:latest
-    container_name: slm-ollama
+    container_name: dpta-ollama
     restart: unless-stopped
     ports:
       - "11434:11434"
@@ -23,7 +23,7 @@ services:
 
   ollama-init:
     image: ollama/ollama:latest
-    container_name: slm-ollama-init
+    container_name: dpta-ollama-init
     depends_on:
       ollama:
         condition: service_healthy
@@ -42,8 +42,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: slm-harness:local
-    container_name: slm-harness
+    image: distil-posthog-traffic-analyser:local
+    container_name: dpta-harness
     depends_on:
       ollama-init:
         condition: service_completed_successfully
@@ -60,8 +60,8 @@ services:
     command: ["bun", "run", "smoke", "--", "--skip-llm"]
 
   dashboard:
-    image: slm-harness:local
-    container_name: slm-dashboard
+    image: distil-posthog-traffic-analyser:local
+    container_name: dpta-dashboard
     depends_on:
       - harness
     env_file:

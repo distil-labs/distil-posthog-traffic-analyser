@@ -88,7 +88,7 @@ async function render(): Promise<string> {
 
   return `<!doctype html>
 <html><head><meta charset="utf-8" />
-<title>SLM Feedback Harness Dashboard</title>
+<title>Distil PostHog Traffic Analyser Dashboard</title>
 <meta http-equiv="refresh" content="30" />
 <style>
   body { font: 14px/1.5 system-ui, sans-serif; max-width: 1100px; margin: 24px auto; padding: 0 16px; color: #1a1a1a; }
@@ -104,7 +104,7 @@ async function render(): Promise<string> {
   @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
 </style></head>
 <body>
-<h1>SLM Feedback Harness Dashboard</h1>
+<h1>Distil PostHog Traffic Analyser Dashboard</h1>
 <div class="meta">Generated ${new Date().toISOString()} · auto-refresh 30s</div>
 
 <h2>Summary</h2>

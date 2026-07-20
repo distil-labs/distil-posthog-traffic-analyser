@@ -1,9 +1,9 @@
-# SLM Feedback Harness
+# Distil PostHog Traffic Analyser
 
-**Use Distil Labs SLMs to analyze PostHog events.** Instead of sending raw event streams to a generalist LLM (slow, expensive, fragile), three narrow specialists do the work — each one a fine-tunable small model that Distil Labs trains on your data and ships back for you to host.
+**Use Distil Labs SLMs to analyze PostHog events.** Instead of sending raw event streams to a generalist LLM (slow, expensive, fragile), three narrow specialists do the work: each one a fine-tunable small model that we train on your data and ship back for you to host.
 
 Built directly from the two references:
-- [Vohra's LinkedIn writeup](https://www.linkedin.com/feed/) on the 7-person startup's product-feedback loop → **what to build**.
+- [Gaurav Vohra's LinkedIn writeup](https://www.linkedin.com/posts/gvohra_im-always-amazed-when-what-i-felt-were-throwaway-activity-7470888412242305026-iv6z) on the 7-person startup's product-feedback loop → **what to build**.
 - [Distil Labs' intelligent harness pattern](https://github.com/distil-labs/distil-self-healing-agent/blob/main/intelligent-harness.md) + [self-healing loop](https://github.com/distil-labs/distil-self-healing-agent/blob/main/self-healing-loop.md) → **how SLMs slot in**.
 
 ---
@@ -28,7 +28,7 @@ PostHog events
    A human reads the findings.
 ```
 
-Each tool has an explicit input + output zod schema in `src/tools/registry.ts`. The schemas **are** the contracts Distil Labs trains against, so the orchestrator never has to parse free-form text.
+Each tool has an explicit input + output zod schema in `src/tools/registry.ts`. The schemas **are** the contracts we train against, so the orchestrator never has to parse free-form text.
 
 | Tool          | Input                       | Output                                                 | Distil Labs target? |
 | ------------- | --------------------------- | ------------------------------------------------------ | :-----------------: |
@@ -36,7 +36,7 @@ Each tool has an explicit input + output zod schema in `src/tools/registry.ts`. 
 | `extractor`   | `{ narration }`             | `{ findings: [{ kind, severity, title, evidence }] }`  | yes                 |
 | `prioritizer` | `{ findings: […] }`         | `{ ranked: [{ id, rank, reason }] }`                   | yes                 |
 
-> The LinkedIn writeup describes more downstream agents (GitHub issue creation, PR coding). Those are deliberately **not** in this repo — they're application code that lives downstream of the SLM analysis. The Distil Labs angle is the analysis itself.
+> The LinkedIn writeup describes more downstream agents (GitHub issue creation, PR coding). Those are deliberately **not** in this repo — they're application code that lives downstream of the SLM analysis. The part we own is the analysis itself.
 
 ---
 
@@ -46,57 +46,66 @@ The three tools each run on one of two engines, selected per tool via env or `--
 
 | Engine | What it is                                                                                        | When to use                                                                                                            |
 | ------ | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `slm`  | Whatever model you host: Ollama (Qwen by default) **or** any OpenAI-compatible HTTP runtime (vLLM, LM Studio, Cloudflare Worker, Groq, Together, …). After Distil Labs ships your fine-tunes, you pin each tool's weights here. | Default for every tool. Production runtime.                                                                            |
-| `llm`  | Cloud generalist. Anthropic Claude Opus **or** OpenAI GPT-5 (`gpt-5-mini` default).                | Teacher mode. Use to bootstrap training data with `bun run collect-training`, or as a reviewer demo path with one key. |
+| `slm`  | The model **you** host: your Distil-trained fine-tune, or a generic small model on Ollama (Qwen by default) or any OpenAI-compatible HTTP runtime (vLLM, LM Studio, Cloudflare Worker, Groq, Together, …). | **Default for every tool. The production path — no frontier API key.** |
+| `llm`  | Cloud generalist. Anthropic Claude Opus **or** OpenAI GPT-5 (`gpt-5-mini` default).                | **Optional.** Teacher mode: label real data with `bun run collect-training`, or run the whole demo on a frontier model with one key. |
 
-**`TOOL_<NAME>_MODEL`** is the distillation switch. After Distil Labs delivers the fine-tunes, pull them onto your runtime and pin:
+**`TOOL_<NAME>_MODEL`** is the distillation switch. After we deliver your fine-tunes, host them on your runtime and pin each tool:
 
 ```bash
-TOOL_NARRATOR_MODEL=distil-labs/feedback-narrator-v1
-TOOL_EXTRACTOR_MODEL=distil-labs/feedback-extractor-v1
-TOOL_PRIORITIZER_MODEL=distil-labs/feedback-prioritizer-v1
+TOOL_NARRATOR_MODEL=<your-narrator-model>
+TOOL_EXTRACTOR_MODEL=<your-extractor-model>
+TOOL_PRIORITIZER_MODEL=<your-prioritizer-model>
 ```
 
-No code change. Same loop. ~150× lower spend per call than running everything on Opus.
+No code change. Same loop. ~150× lower spend per call than running everything on a frontier model.
 
 ---
 
-## TL;DR — 5 minutes to a working demo
+## TL;DR — clone to a trained model, no frontier key
 
-You need: **Bun** (`curl -fsSL https://bun.sh/install | bash`) and **one** API key (Anthropic by default; OpenAI works with one config flip). No PostHog, no Ollama, no Distil Labs.
+The main path runs on SLMs you own. Committed seed data (`examples/seeds/`) means you can train your tools without running a frontier teacher at all.
 
 ```bash
-unzip slm-feedback-harness.zip && cd slm
 bun install
 
-cp .env.example .env
-# In .env set ANTHROPIC_API_KEY (or OPENAI_API_KEY + LLM_PROVIDER=openai).
-# Leave everything else blank.
+# 1. Send us the committed seeds. We expand each tool's seeds into synthetic
+#    training data and return a fine-tuned model per tool.
+#    examples/seeds/{narrator,extractor,prioritizer}.jsonl
 
-bun test                      # 76 unit tests, ~2s. No keys needed.
-bun run smoke                 # one cloud-LLM call. Prints sample output + cost.
-bun run demo                  # END-TO-END on 5 bundled sample sessions:
+# 2. Host the models you get back and pin them per tool in .env:
+cp .env.example .env
+#    TOOL_NARRATOR_MODEL=<your-narrator-model>
+#    TOOL_EXTRACTOR_MODEL=<your-extractor-model>
+#    TOOL_PRIORITIZER_MODEL=<your-prioritizer-model>
+
+# 3. Run the pipeline on your models — no API key:
+bun run demo                  # END-TO-END on 5 bundled sample sessions, engine=slm
                               #   narrate → extract → prioritize → show top findings
-                              #   ~10-20 LLM calls, ~$0.10-$0.30, ~1 minute.
 ```
 
-`bun run demo` forces `--engine llm` so a reviewer with one key sees the loop without needing local models. After distillation the same demo runs on the SLM engine (Ollama or whichever runtime hosts your distilled weights). `bun run demo --engine slm` exercises the SLM path against generic Qwen if you have Ollama up.
+Want to see the loop before you distill? `ollama pull qwen2.5:7b` and run `bun run demo` against the generic placeholder. Quality is "OK" until you swap in your Distil model.
+
+**Optional frontier path.** `bun run demo --engine llm` runs the whole pipeline on a frontier model instead (set `ANTHROPIC_API_KEY`, or `OPENAI_API_KEY` + `LLM_PROVIDER=openai`). It's the same model that labels training data, handy for seeing the pipeline without a local model, but it isn't the production path. `bun test` (76 tests) needs no keys.
 
 ---
 
-## Distil Labs hand-off in one command
+## Getting your models: two ways
+
+**A) Use the committed seeds (no frontier key).** `examples/seeds/` ships hand-authored, schema-valid seed pairs for all three tools. Send them to us as-is; we expand them into synthetic training data and return a fine-tuned model per tool. See [`examples/seeds/README.md`](examples/seeds/README.md).
+
+**B) Label your own PostHog data with the teacher.** When you have real sessions and want the training data to reflect your product, run the teacher over them:
 
 ```bash
-bun run collect-training --limit 200
+bun run collect-training --limit 200   # needs a frontier key (this is the teacher step)
 ```
 
-For each of the three tools, this runs the cloud LLM as the **teacher** over real cached pipeline inputs, validates each output against the tool's `outputSchema`, and writes schema-clean training pairs to `data/training/<tool>.jsonl`:
+For each tool, this runs the teacher over your cached pipeline inputs, validates each output against the tool's `outputSchema`, and writes schema-clean pairs to `data/training/<tool>.jsonl` — the same format as the committed seeds:
 
 ```json
-{"tool":"extractor","teacher":"llm-extractor","input":{"narration":"…"},"output":{"findings":[…]}}
+{"tool":"extractor","teacher":"claude-opus-4-7","input":{"narration":"…"},"output":{"findings":[…]}}
 ```
 
-Hand the jsonl files to the Distil Labs platform. They expand the seeds into synthetic training data and ship back a fine-tuned model file per tool. Deploy them on your runtime (Ollama, vLLM, etc.) and pin via `TOOL_<NAME>_MODEL`. Done.
+Either way, send us the jsonl, host the models we return, and pin via `TOOL_<NAME>_MODEL`. Done.
 
 After distillation, run the eval to confirm the student matches the teacher:
 
@@ -109,16 +118,17 @@ bun run eval --sample 20
 ## Every script
 
 ```bash
-bun run demo                                          # end-to-end on bundled samples
-bun run demo --engine slm                             # same, on Ollama / OpenAI-compatible SLM
+bun run demo                                          # end-to-end on bundled samples (engine=slm)
+bun run demo --engine llm                             # optional: run it all on the frontier teacher
+bun run build-seeds                                   # regenerate examples/seeds/ from typed source
 bun run ingest           --since 24h                  # pull recent PostHog events
 bun run narrate          --limit 50                   # raw events → narration cache
 bun run extract          --threshold 0.85             # narrations → deduped findings
 bun run prioritize       --limit 50                   # rank findings
 bun run report                                        # markdown rollup
 bun run dashboard                                     # localhost:8787, auto-refresh 30s
-bun run eval             --sample 20                  # SLM vs LLM extractor head-to-head
-bun run collect-training --limit 200                  # jsonl training pairs for Distil Labs
+bun run eval             --sample 20                  # SLM vs teacher head-to-head
+bun run collect-training --limit 200                  # label your own data with the teacher (needs key)
 bun run test                                          # 76 unit tests
 ```
 
@@ -129,10 +139,12 @@ bun run test                                          # 76 unit tests
 ```bash
 bun install
 cp .env.example .env
-# Fill ANTHROPIC_API_KEY (or OPENAI_*), POSTHOG_API_KEY, POSTHOG_PROJECT_ID.
+# Fill POSTHOG_API_KEY, POSTHOG_PROJECT_ID.
+# Pin your Distil models via TOOL_<NAME>_MODEL (the pipeline runs on the SLM engine).
+# ANTHROPIC_API_KEY / OPENAI_* are only needed if you also run collect-training (the teacher).
 
 ollama serve &              # if not already running
-ollama pull qwen2.5:7b      # generic SLM placeholder
+ollama pull qwen2.5:7b      # generic SLM placeholder until your models are pinned
 ollama pull nomic-embed-text
 
 bun run ingest --since 24h
@@ -224,25 +236,26 @@ tests/            76 unit tests across 11 files
 data/             findings.db · sessions/*.jsonl
                   cache/narrations.jsonl · cost.jsonl
                   report-*.md · eval-*.md
-                  training/<tool>.jsonl (Distil Labs handoff)
+                  training/<tool>.jsonl (training pairs you send us)
 ```
 
 ---
 
-## For a Distil Labs reviewer
+## Evaluating the harness
 
-1. **Run `bun run demo`.** Five PostHog-shaped sample sessions go through narrator → extractor → prioritizer. One Anthropic key, no Ollama, one transcript.
-2. **Read the contracts.** [`src/tools/registry.ts`](src/tools/registry.ts) — three tools, each with explicit input + output zod schemas. That is the contract Distil Labs trains against.
-3. **Inspect the training-data shape.** Run `bun run collect-training --limit 50 --dry-run` to see what we'd hand off: jsonl pairs of `{tool, teacher, input (schema-validated), output (schema-validated)}`.
-4. **Try the model switch.** After delivery, pin a distilled fine-tune via `TOOL_<NAME>_MODEL=distil-labs/feedback-extractor-v1`. The `slm` engine routes that single tool to the new weights — no code change.
-5. **Watch the cost line.** `bun run report` reads `data/cost.jsonl` and shows spend per agent and per model. After distillation, the LLM rows go quiet.
+1. **Read the seeds.** [`examples/seeds/`](examples/seeds/) — hand-authored, schema-valid `{tool, teacher, input, output}` pairs for all three tools. This is what you train on; no frontier key needed to produce them.
+2. **Read the contracts.** [`src/tools/registry.ts`](src/tools/registry.ts) — three tools, each with explicit input + output zod schemas. Those are the contracts you train against, and the seeds validate against them.
+3. **Run it.** `bun run demo` runs the pipeline on the SLM engine. Pin your trained models via `TOOL_<NAME>_MODEL`, or `ollama pull qwen2.5:7b` for a generic placeholder first. `bun run demo --engine llm` runs the optional frontier teacher path with one key.
+4. **Try the model switch.** Pin a fine-tune via `TOOL_EXTRACTOR_MODEL=<your-extractor-model>`. The `slm` engine routes that single tool to the new weights — no code change.
+5. **See the training-data shape from real data.** `bun run collect-training --limit 50 --dry-run` shows the teacher-labeled pairs you'd generate from your own PostHog sessions (same shape as the seeds).
+6. **Watch the cost line.** `bun run report` reads `data/cost.jsonl` and shows spend per agent and per model. On the SLM path the frontier rows stay at zero.
 
 ---
 
 ## Cost (rough)
 
-- **Teacher mode (`--engine llm` everywhere, what `bun run demo` and `bun run collect-training` use):** ~$0.10 – $0.30 for one demo run on 5 sample sessions; a 24-hour run on a few hundred sessions lands around $0.50 – $2.00.
-- **SLM mode on generic Qwen via Ollama:** $0 at inference. Quality is "OK" — placeholder until distillation.
-- **SLM mode after distillation:** $0 at inference, quality matches the teacher (the intelligent-harness post claims 0.6B students beat 120B teachers by ~29 points on the target task).
+- **SLM path (the default: `bun run demo`, your models or a generic Ollama model):** $0 at inference. The models run on your own hardware; cost is fixed infrastructure, not per-call.
+- **SLM path after distillation:** $0 at inference, quality tracks the teacher (the intelligent-harness post reports 0.6B students beating 120B teachers by ~29 points on the target task; run `bun run eval` for your own numbers).
+- **Optional teacher path (`--engine llm`, and `collect-training`):** ~$0.10 – $0.30 for one demo run on 5 sample sessions; labeling a few hundred real sessions lands around $0.50 – $2.00. You only pay this to generate training data or to run the teacher demo.
 
 Run `bun run report` after any run for the exact breakdown by agent and by model.

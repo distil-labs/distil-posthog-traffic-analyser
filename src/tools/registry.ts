@@ -14,9 +14,9 @@ import type { StoredFinding } from "../types.ts";
 /**
  * Engines:
  *   - "slm": narrow specialist. Today: generic Qwen (Ollama) or an
- *     OpenAI-compatible runtime. Tomorrow: same engine, just point it
- *     at a distilled fine-tune that Distil Labs trained for the tool
- *     (e.g. OLLAMA_MODEL=distil-labs/feedback-extractor-v1, or via
+ *     OpenAI-compatible runtime. After you distill your own tools, point
+ *     this at the fine-tune Distil Labs trained on your data
+ *     (e.g. OLLAMA_MODEL=<your-distilled-extractor>, or via
  *     OPENAI_BASE_URL when the model is served behind a Cloudflare
  *     Worker / vLLM endpoint). Distil Labs is a training platform, so
  *     the deployment runtime is the customer's choice.

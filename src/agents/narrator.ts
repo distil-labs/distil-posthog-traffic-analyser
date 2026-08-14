@@ -20,6 +20,12 @@ const HUMAN_PROP_KEYS = [
   "feature",
   "button",
   "label",
+  "query",
+  "filter",
+  "form",
+  "setting",
+  "value",
+  "plan",
 ];
 
 function msToHuman(ms: number): string {

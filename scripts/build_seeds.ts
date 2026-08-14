@@ -20,7 +20,7 @@ import {
   type Session,
 } from "../src/types.ts";
 
-const OUT_DIR = join(import.meta.dir, "..", "examples", "seeds");
+const OUT_DIR = join(import.meta.dirname ?? import.meta.dir, "..", "examples", "seeds");
 
 function ev(
   id: string,
@@ -293,6 +293,159 @@ const seeds: SeedRow[] = [
       "The user opened the reports page and applied a status filter to narrow the results. They exported the filtered report to CSV and the download succeeded. They left the page after a successful export.",
     findings: [],
   },
+  {
+    session: session("seed-s16", "u-paid-atlas-16", "2026-06-17T14:40:00Z", "2026-06-17T14:42:20Z", [
+      ev("e1", "u-paid-atlas-16", "$pageview", "2026-06-17T14:40:00Z", { $pathname: "/dashboard", $browser: "Mobile Safari" }),
+      ev("e2", "u-paid-atlas-16", "button_click", "2026-06-17T14:40:30Z", { button: "Menu", $pathname: "/dashboard", $browser: "Mobile Safari" }),
+      ev("e3", "u-paid-atlas-16", "button_click", "2026-06-17T14:40:50Z", { button: "Menu", $pathname: "/dashboard", $browser: "Mobile Safari" }),
+      ev("e4", "u-paid-atlas-16", "button_click", "2026-06-17T14:41:10Z", { button: "Menu", $pathname: "/dashboard", $browser: "Mobile Safari" }),
+      ev("e5", "u-paid-atlas-16", "rage_click", "2026-06-17T14:41:30Z", { $pathname: "/dashboard", $browser: "Mobile Safari" }),
+      ev("e6", "u-paid-atlas-16", "$pageleave", "2026-06-17T14:42:20Z", { $pathname: "/dashboard" }),
+    ]),
+    narration:
+      "The user opened the dashboard on Mobile Safari and tapped the Menu button, which never opened. They tapped Menu two more times and then rage-clicked with no response. They left the app without reaching any other page.",
+    findings: [
+      bug(3, "Navigation menu does not open on mobile", "A Mobile Safari user tapped the Menu button three times and rage-clicked without the menu ever opening."),
+    ],
+  },
+  {
+    session: session("seed-s17", "u-paid-helix-17", "2026-06-17T15:00:00Z", "2026-06-17T15:04:10Z", [
+      ev("e1", "u-paid-helix-17", "$pageview", "2026-06-17T15:00:00Z", { $pathname: "/settings/webhooks" }),
+      ev("e2", "u-paid-helix-17", "form_submit", "2026-06-17T15:01:00Z", { form: "webhook-config", $pathname: "/settings/webhooks" }),
+      ev("e3", "u-paid-helix-17", "webhook_saved", "2026-06-17T15:01:02Z", { $pathname: "/settings/webhooks" }),
+      ev("e4", "u-paid-helix-17", "button_click", "2026-06-17T15:01:30Z", { button: "Send test event", $pathname: "/settings/webhooks" }),
+      ev("e5", "u-paid-helix-17", "webhook_test_failed", "2026-06-17T15:01:42Z", { error: "Timeout after 10s", $pathname: "/settings/webhooks" }),
+      ev("e6", "u-paid-helix-17", "button_click", "2026-06-17T15:02:40Z", { button: "Send test event", $pathname: "/settings/webhooks" }),
+      ev("e7", "u-paid-helix-17", "webhook_test_failed", "2026-06-17T15:02:52Z", { error: "Timeout after 10s", $pathname: "/settings/webhooks" }),
+      ev("e8", "u-paid-helix-17", "$pageleave", "2026-06-17T15:04:10Z", { $pathname: "/settings/webhooks" }),
+    ]),
+    narration:
+      "The user opened webhook settings and saved a new webhook endpoint. They clicked Send test event twice, and both deliveries failed with a timeout after ten seconds. They left the page without a working webhook.",
+    findings: [
+      bug(4, "Webhook test deliveries time out", "Both Send test event attempts on a newly saved endpoint failed with a ten-second timeout."),
+    ],
+  },
+  {
+    session: session("seed-s18", "u-trial-cove-18", "2026-06-17T15:20:00Z", "2026-06-17T15:23:00Z", [
+      ev("e1", "u-trial-cove-18", "$pageview", "2026-06-17T15:20:00Z", { $pathname: "/integrations" }),
+      ev("e2", "u-trial-cove-18", "integration_connect_start", "2026-06-17T15:20:40Z", { feature: "Google Sheets", $pathname: "/integrations" }),
+      ev("e3", "u-trial-cove-18", "oauth_completed", "2026-06-17T15:21:30Z", { feature: "Google Sheets", $pathname: "/integrations" }),
+      ev("e4", "u-trial-cove-18", "integration_connected", "2026-06-17T15:21:35Z", { feature: "Google Sheets", $pathname: "/integrations" }),
+      ev("e5", "u-trial-cove-18", "$pageleave", "2026-06-17T15:23:00Z", { $pathname: "/integrations" }),
+    ]),
+    narration:
+      "The user opened the integrations page and started connecting Google Sheets. They completed the OAuth authorization and the integration was marked connected. They left the page after the successful setup.",
+    findings: [],
+  },
+  {
+    session: session("seed-s19", "u-paid-forge-19", "2026-06-17T15:40:00Z", "2026-06-17T15:43:30Z", [
+      ev("e1", "u-paid-forge-19", "$pageview", "2026-06-17T15:40:00Z", { $pathname: "/settings/security" }),
+      ev("e2", "u-paid-forge-19", "search", "2026-06-17T15:40:30Z", { query: "saml", $pathname: "/settings/security" }),
+      ev("e3", "u-paid-forge-19", "search_no_results", "2026-06-17T15:40:32Z", { query: "saml", $pathname: "/settings/security" }),
+      ev("e4", "u-paid-forge-19", "search", "2026-06-17T15:41:10Z", { query: "single sign-on", $pathname: "/settings/security" }),
+      ev("e5", "u-paid-forge-19", "search_no_results", "2026-06-17T15:41:12Z", { query: "single sign-on", $pathname: "/settings/security" }),
+      ev("e6", "u-paid-forge-19", "feature_request_click", "2026-06-17T15:42:00Z", { feature: "Request SSO/SAML", $pathname: "/settings/security" }),
+      ev("e7", "u-paid-forge-19", "$pageleave", "2026-06-17T15:43:30Z", { $pathname: "/settings/security" }),
+    ]),
+    narration:
+      "The user opened security settings and searched for saml and then single sign-on, with both searches returning no results. They clicked Request SSO/SAML. They left the page unable to configure single sign-on for their team.",
+    findings: [
+      gap(4, "No SSO / SAML login available", "User searched security settings for saml and single sign-on, got no results, and filed a request for SSO/SAML support."),
+    ],
+  },
+  {
+    session: session("seed-s20", "u-paid-ridge-20", "2026-06-17T16:00:00Z", "2026-06-17T16:06:30Z", [
+      ev("e1", "u-paid-ridge-20", "$pageview", "2026-06-17T16:00:00Z", { $pathname: "/reports" }),
+      ev("e2", "u-paid-ridge-20", "filter_apply", "2026-06-17T16:00:30Z", { filter: "date=last_90_days", $pathname: "/reports" }),
+      ev("e3", "u-paid-ridge-20", "page_refresh", "2026-06-17T16:03:00Z", { $pathname: "/reports" }),
+      ev("e4", "u-paid-ridge-20", "filter_apply", "2026-06-17T16:03:40Z", { filter: "date=last_90_days", $pathname: "/reports" }),
+      ev("e5", "u-paid-ridge-20", "report_generated", "2026-06-17T16:06:00Z", { $pathname: "/reports" }),
+      ev("e6", "u-paid-ridge-20", "$pageleave", "2026-06-17T16:06:30Z", { $pathname: "/reports" }),
+    ]),
+    narration:
+      "The user opened the reports page and applied a last-90-days date filter, but the report kept loading without completing. They refreshed the page, which cleared their filter, and had to reapply it before the report finally generated after a long wait. They left the page as soon as the report loaded.",
+    findings: [
+      bug(3, "Report generation is slow for large date ranges", "A last-90-days report kept the user waiting so long they refreshed, and it still took minutes end to end."),
+      bug(2, "Filter selection resets on page refresh", "Refreshing the reports page cleared the user's applied date filter and forced them to reapply it."),
+    ],
+  },
+  {
+    session: session("seed-s21", "u-trial-mesa-21", "2026-06-17T16:20:00Z", "2026-06-17T16:22:40Z", [
+      ev("e1", "u-trial-mesa-21", "$pageview", "2026-06-17T16:20:00Z", { $pathname: "/reports" }),
+      ev("e2", "u-trial-mesa-21", "search", "2026-06-17T16:20:30Z", { query: "schedule report", $pathname: "/reports" }),
+      ev("e3", "u-trial-mesa-21", "search_no_results", "2026-06-17T16:20:32Z", { query: "schedule report", $pathname: "/reports" }),
+      ev("e4", "u-trial-mesa-21", "feature_request_click", "2026-06-17T16:21:20Z", { feature: "Request scheduled reports", $pathname: "/reports" }),
+      ev("e5", "u-trial-mesa-21", "$pageleave", "2026-06-17T16:22:40Z", { $pathname: "/reports" }),
+    ]),
+    narration:
+      "The user opened the reports page and searched for a way to schedule a report. The search returned no results and they clicked Request scheduled reports. They left the page without setting up a schedule.",
+    findings: [
+      gap(2, "No way to schedule recurring reports", "User searched for report scheduling, found nothing, and clicked Request scheduled reports before leaving."),
+    ],
+  },
+  {
+    session: session("seed-s22", "u-paid-delta-22", "2026-06-17T16:40:00Z", "2026-06-17T16:45:20Z", [
+      ev("e1", "u-paid-delta-22", "$pageview", "2026-06-17T16:40:00Z", { $pathname: "/login" }),
+      ev("e2", "u-paid-delta-22", "button_click", "2026-06-17T16:40:20Z", { button: "Forgot password", $pathname: "/login" }),
+      ev("e3", "u-paid-delta-22", "form_submit", "2026-06-17T16:40:50Z", { form: "password-reset", $pathname: "/login" }),
+      ev("e4", "u-paid-delta-22", "form_submit", "2026-06-17T16:43:00Z", { form: "password-reset", $pathname: "/login" }),
+      ev("e5", "u-paid-delta-22", "support_chat_open", "2026-06-17T16:44:00Z", { $pathname: "/login" }),
+      ev("e6", "u-paid-delta-22", "support_message_sent", "2026-06-17T16:44:40Z", { message: "No reset email received", $pathname: "/login" }),
+      ev("e7", "u-paid-delta-22", "$pageleave", "2026-06-17T16:45:20Z", { $pathname: "/login" }),
+    ]),
+    narration:
+      "The user clicked Forgot password on the login page and submitted the reset form. Receiving nothing, they submitted the form again and then opened support chat to say no reset email had arrived. They left without regaining access to their account.",
+    findings: [
+      bug(4, "Password reset email never arrives", "User submitted the reset form twice, received no email, and told support no reset email had arrived."),
+    ],
+  },
+  {
+    session: session("seed-s23", "u-paid-lumen-12", "2026-06-17T17:00:00Z", "2026-06-17T17:02:10Z", [
+      ev("e1", "u-paid-lumen-12", "$pageview", "2026-06-17T17:00:00Z", { $pathname: "/settings/notifications" }),
+      ev("e2", "u-paid-lumen-12", "toggle", "2026-06-17T17:00:40Z", { setting: "weekly_digest", value: "on", $pathname: "/settings/notifications" }),
+      ev("e3", "u-paid-lumen-12", "button_click", "2026-06-17T17:01:00Z", { button: "Save", $pathname: "/settings/notifications" }),
+      ev("e4", "u-paid-lumen-12", "save_succeeded", "2026-06-17T17:01:02Z", { $pathname: "/settings/notifications" }),
+      ev("e5", "u-paid-lumen-12", "$pageleave", "2026-06-17T17:02:10Z", { $pathname: "/settings/notifications" }),
+    ]),
+    narration:
+      "The user opened notification settings and toggled the weekly digest on. They clicked Save and the change was saved successfully. They left settings with the digest enabled.",
+    findings: [],
+  },
+  {
+    session: session("seed-s24", "u-trial-quill-24", "2026-06-17T17:20:00Z", "2026-06-17T17:25:00Z", [
+      ev("e1", "u-trial-quill-24", "$pageview", "2026-06-17T17:20:00Z", { $pathname: "/records" }),
+      ev("e2", "u-trial-quill-24", "search", "2026-06-17T17:20:30Z", { query: "import csv", $pathname: "/records" }),
+      ev("e3", "u-trial-quill-24", "search_no_results", "2026-06-17T17:20:32Z", { query: "import csv", $pathname: "/records" }),
+      ev("e4", "u-trial-quill-24", "button_click", "2026-06-17T17:21:10Z", { button: "Add record", $pathname: "/records" }),
+      ev("e5", "u-trial-quill-24", "record_created", "2026-06-17T17:21:50Z", { $pathname: "/records" }),
+      ev("e6", "u-trial-quill-24", "button_click", "2026-06-17T17:22:20Z", { button: "Add record", $pathname: "/records" }),
+      ev("e7", "u-trial-quill-24", "record_created", "2026-06-17T17:23:00Z", { $pathname: "/records" }),
+      ev("e8", "u-trial-quill-24", "button_click", "2026-06-17T17:23:30Z", { button: "Add record", $pathname: "/records" }),
+      ev("e9", "u-trial-quill-24", "record_created", "2026-06-17T17:24:10Z", { $pathname: "/records" }),
+      ev("e10", "u-trial-quill-24", "$pageleave", "2026-06-17T17:25:00Z", { $pathname: "/records" }),
+    ]),
+    narration:
+      "The user opened the records page and searched for import csv, which returned no results. They then created three records one at a time by hand. They left the page after finishing the manual entry.",
+    findings: [
+      gap(3, "No CSV import for bulk record creation", "User searched for import csv, found nothing, and manually created three records one at a time."),
+    ],
+  },
+  {
+    session: session("seed-s25", "u-trial-shore-25", "2026-06-17T17:40:00Z", "2026-06-17T17:42:30Z", [
+      ev("e1", "u-trial-shore-25", "$pageview", "2026-06-17T17:40:00Z", { $pathname: "/shared/report-8f3a2c" }),
+      ev("e2", "u-trial-shore-25", "page_not_found", "2026-06-17T17:40:01Z", { error: "404 Not Found", $pathname: "/shared/report-8f3a2c" }),
+      ev("e3", "u-trial-shore-25", "page_refresh", "2026-06-17T17:41:00Z", { $pathname: "/shared/report-8f3a2c" }),
+      ev("e4", "u-trial-shore-25", "page_not_found", "2026-06-17T17:41:01Z", { error: "404 Not Found", $pathname: "/shared/report-8f3a2c" }),
+      ev("e5", "u-trial-shore-25", "page_refresh", "2026-06-17T17:42:00Z", { $pathname: "/shared/report-8f3a2c" }),
+      ev("e6", "u-trial-shore-25", "page_not_found", "2026-06-17T17:42:01Z", { error: "404 Not Found", $pathname: "/shared/report-8f3a2c" }),
+      ev("e7", "u-trial-shore-25", "$pageleave", "2026-06-17T17:42:30Z", { $pathname: "/shared/report-8f3a2c" }),
+    ]),
+    narration:
+      "The user opened a shared report link and received a 404 Not Found error. They refreshed twice and hit the same 404 each time. They left without ever seeing the shared report.",
+    findings: [
+      bug(4, "Shared report links return a 404", "A shared report URL returned 404 Not Found on load and after two refreshes."),
+    ],
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -445,6 +598,126 @@ const priorBatches: PriorBatch[] = [
       { id: "f-l1", rank: 1, reason: "Severity 4 and it intermittently blocks login for 7 users; an auth lockout is an availability and security issue, so it leads." },
       { id: "f-l2", rank: 2, reason: "Severity-3 compliance gap for 5 enterprise admins; unblocks deals and audits, ranking above the cosmetic grid bug." },
       { id: "f-l3", rank: 3, reason: "Highest frequency (11) but only severity 2 and purely ergonomic; a low-effort polish item that ranks last against auth and compliance." },
+    ],
+  },
+  {
+    findings: [
+      { id: "f-m1", kind: "bug", severity: 4, occurrences: 12, title: "Password reset email never arrives", evidence: "12 locked-out users submitted reset forms and got no email." },
+      { id: "f-m2", kind: "bug", severity: 4, occurrences: 6, title: "Shared report links return a 404", evidence: "6 external viewers hit 404s on shared report URLs." },
+      { id: "f-m3", kind: "bug", severity: 3, occurrences: 18, title: "Navigation menu does not open on mobile", evidence: "18 mobile users rage-clicked an unresponsive menu." },
+      { id: "f-m4", kind: "gap", severity: 1, occurrences: 2, title: "No compact table density option", evidence: "2 users asked for a denser table view." },
+    ],
+    ranked: [
+      { id: "f-m1", rank: 1, reason: "Severity 4 with 12 users fully locked out of their accounts; an access blocker with no workaround leads the batch." },
+      { id: "f-m2", rank: 2, reason: "Also severity 4, and the 404s burn 6 external viewers at the exact moment the product is shown to outsiders; high cost-of-delay, just behind the lockouts." },
+      { id: "f-m3", rank: 3, reason: "Severity 3 but the highest frequency (18 mobile users); real daily friction that still leaves the app reachable, so it follows the two blockers." },
+      { id: "f-m4", rank: 4, reason: "A severity-1 preference with 2 requests; cosmetic and safely last." },
+    ],
+  },
+  {
+    findings: [
+      { id: "f-n1", kind: "bug", severity: 4, occurrences: 5, title: "Webhook test deliveries time out", evidence: "5 integrators could not get a test event delivered." },
+    ],
+    ranked: [
+      { id: "f-n1", rank: 1, reason: "The only finding in the batch, so it is rank 1 by default. Severity 4 for 5 integrators still deserves prompt attention because failed webhooks block downstream automations." },
+    ],
+  },
+  {
+    findings: [
+      { id: "f-o1", kind: "gap", severity: 4, occurrences: 13, title: "No SSO / SAML login available", evidence: "13 enterprise evaluators required SSO before rollout." },
+      { id: "f-o2", kind: "gap", severity: 3, occurrences: 12, title: "No CSV import for bulk record creation", evidence: "12 users wanted bulk import instead of manual entry." },
+      { id: "f-o3", kind: "gap", severity: 2, occurrences: 7, title: "No way to schedule recurring reports", evidence: "7 users asked for scheduled exports." },
+    ],
+    ranked: [
+      { id: "f-o1", rank: 1, reason: "Severity-4 gap that gates enterprise deals outright: 13 evaluators named SSO a requirement, the largest revenue upside in the batch." },
+      { id: "f-o2", rank: 2, reason: "Severity 3 with 12 users stuck doing manual entry; removes a painful workflow and aids activation, so it sits above the convenience gap." },
+      { id: "f-o3", rank: 3, reason: "Severity 2 with 7 requests; a workflow convenience users can live without, so it ranks last among the three gaps." },
+    ],
+  },
+  {
+    findings: [
+      { id: "f-p1", kind: "bug", severity: 3, occurrences: 11, title: "Attachment preview fails for PDF files", evidence: "11 users saw a blank pane instead of a PDF preview." },
+      { id: "f-p2", kind: "bug", severity: 3, occurrences: 6, title: "Weekly digest email contains duplicate rows", evidence: "6 users received digests with repeated entries." },
+      { id: "f-p3", kind: "bug", severity: 3, occurrences: 2, title: "Avatar crop is misaligned on upload", evidence: "2 users ended up with off-center avatars." },
+    ],
+    ranked: [
+      { id: "f-p1", rank: 1, reason: "All three bugs are severity 3, so frequency decides: 11 users hit the broken PDF preview, the widest reach in the batch." },
+      { id: "f-p2", rank: 2, reason: "Same severity with 6 affected users, and duplicated rows chip at trust in emailed numbers; ahead of the rare crop issue." },
+      { id: "f-p3", rank: 3, reason: "Severity 3 but only 2 occurrences and purely visual; last in a tie broken by reach." },
+    ],
+  },
+  {
+    findings: [
+      { id: "f-q1", kind: "bug", severity: 5, occurrences: 2, title: "API keys appear in plaintext in shareable URLs", evidence: "2 users found live API keys embedded in copied links." },
+      { id: "f-q2", kind: "bug", severity: 2, occurrences: 25, title: "Chart labels overlap on narrow screens", evidence: "25 users saw overlapping axis labels." },
+      { id: "f-q3", kind: "gap", severity: 3, occurrences: 3, title: "No per-project access controls", evidence: "3 admins wanted to restrict members to specific projects." },
+    ],
+    ranked: [
+      { id: "f-q1", rank: 1, reason: "Severity-5 credential leak: keys in URLs can be forwarded or logged anywhere, an incident-class risk that leads regardless of only 2 reports." },
+      { id: "f-q3", rank: 2, reason: "A severity-3 permissions gap for 3 admins with security implications of its own, so it outranks the high-frequency cosmetic bug." },
+      { id: "f-q2", rank: 3, reason: "Highest frequency (25) but severity 2 and purely visual; polish that trails both security items." },
+    ],
+  },
+  {
+    findings: [
+      { id: "f-r1", kind: "bug", severity: 4, occurrences: 6, title: "Coupon codes rejected at checkout", evidence: "6 users had valid promo codes declined at payment." },
+      { id: "f-r2", kind: "bug", severity: 3, occurrences: 10, title: "Onboarding tour crashes on step three", evidence: "10 new users had the guided tour crash midway." },
+      { id: "f-r3", kind: "gap", severity: 3, occurrences: 4, title: "No annual billing option", evidence: "4 customers asked to pay yearly." },
+    ],
+    ranked: [
+      { id: "f-r1", rank: 1, reason: "Severity 4 at the moment of purchase: 6 users with valid codes were turned away at checkout, direct revenue loss with high cost-of-delay." },
+      { id: "f-r2", rank: 2, reason: "Severity 3 hitting 10 brand-new users during activation; a crashing tour sours first impressions, so it sits just behind the checkout bug." },
+      { id: "f-r3", rank: 3, reason: "Severity-3 gap with 4 requests and an easy workaround (monthly billing); an expansion nicety that ranks last." },
+    ],
+  },
+  {
+    findings: [
+      { id: "f-s1", kind: "bug", severity: 4, occurrences: 7, title: "Exported PDF reports are missing charts", evidence: "7 users got PDFs with blank chart areas." },
+      { id: "f-s2", kind: "bug", severity: 3, occurrences: 9, title: "Search silently omits archived records", evidence: "9 users could not find records that exist in the archive." },
+      { id: "f-s3", kind: "gap", severity: 3, occurrences: 8, title: "No Jira integration", evidence: "8 teams asked to push findings to Jira." },
+      { id: "f-s4", kind: "bug", severity: 2, occurrences: 30, title: "Login page takes over three seconds to load", evidence: "30 users saw slow login page loads." },
+    ],
+    ranked: [
+      { id: "f-s1", rank: 1, reason: "Severity 4 and the exported deliverable itself is wrong: 7 users already sent broken PDFs onward, so output correctness leads." },
+      { id: "f-s2", rank: 2, reason: "Severity 3 silent incompleteness for 9 users; search that quietly hides records misleads without erroring, just behind the broken export." },
+      { id: "f-s3", rank: 3, reason: "Solid demand from 8 teams, but a feature build costs more than the two bug fixes above it, so the gap ranks third." },
+      { id: "f-s4", rank: 4, reason: "Widest reach (30 users) yet severity 2 and merely slow rather than broken; last." },
+    ],
+  },
+  {
+    findings: [
+      { id: "f-t1", kind: "bug", severity: 4, occurrences: 9, title: "Email verification links expire after five minutes", evidence: "9 signups clicked expired verification links and stalled." },
+      { id: "f-t2", kind: "gap", severity: 3, occurrences: 14, title: "New accounts land on an empty dashboard", evidence: "14 new users saw a blank dashboard with no sample data." },
+      { id: "f-t3", kind: "bug", severity: 1, occurrences: 3, title: "Typos in the French interface", evidence: "3 users reported French translation typos." },
+    ],
+    ranked: [
+      { id: "f-t1", rank: 1, reason: "Severity 4 stalling 9 signups before they ever reach the product; a hard activation blocker with no workaround leads." },
+      { id: "f-t2", rank: 2, reason: "Severity-3 gap with the highest count (14 new users); an empty first-run dashboard hurts activation but does not stop it, so second." },
+      { id: "f-t3", rank: 3, reason: "Severity 1 with 3 reports; cosmetic copy fixes rank last." },
+    ],
+  },
+  {
+    findings: [
+      { id: "f-u1", kind: "bug", severity: 4, occurrences: 4, title: "API returns 500 when paginating past page 100", evidence: "4 integrations crashed on deep pagination." },
+      { id: "f-u2", kind: "gap", severity: 3, occurrences: 7, title: "API docs missing the v2 endpoints", evidence: "7 developers asked where the v2 reference lives." },
+      { id: "f-u3", kind: "gap", severity: 2, occurrences: 5, title: "No sandbox environment for API testing", evidence: "5 developers requested a test sandbox." },
+    ],
+    ranked: [
+      { id: "f-u1", rank: 1, reason: "Severity 4 hard failure breaking 4 production integrations; a crashing API endpoint outranks documentation and tooling gaps." },
+      { id: "f-u2", rank: 2, reason: "Severity 3 with 7 developers blocked on missing docs; cheap to fix relative to its integration-unblocking value, so second." },
+      { id: "f-u3", rank: 3, reason: "Severity 2 with 5 requests; a developer-experience nicety that can wait behind the crash and the docs." },
+    ],
+  },
+  {
+    findings: [
+      { id: "f-v1", kind: "bug", severity: 5, occurrences: 3, title: "Cancellation flow errors at the confirmation step", evidence: "3 customers could not complete a cancellation." },
+      { id: "f-v2", kind: "bug", severity: 3, occurrences: 8, title: "Invoice PDF download fails", evidence: "8 customers could not download invoices for expense reports." },
+      { id: "f-v3", kind: "gap", severity: 2, occurrences: 6, title: "No usage-based pricing plan", evidence: "6 prospects asked for usage-based pricing." },
+    ],
+    ranked: [
+      { id: "f-v1", rank: 1, reason: "Severity 5: trapping 3 users who are trying to leave is a trust and compliance liability, so a broken cancellation flow leads even at low frequency." },
+      { id: "f-v2", rank: 2, reason: "Severity 3 blocking 8 customers from invoices they need for expenses; recurring administrative pain, so it ranks second." },
+      { id: "f-v3", rank: 3, reason: "Severity-2 pricing gap with 6 requests; a sales consideration rather than a product defect, ranking last." },
     ],
   },
 ];

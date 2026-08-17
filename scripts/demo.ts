@@ -22,7 +22,9 @@ import { copyFile, mkdir, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { dispatchExtractor, dispatchNarrator, dispatchPrioritizer } from "../src/tools/dispatch.ts";
+import { Embedder } from "../src/integrations/embeddings.ts";
 import { FindingsDB } from "../src/integrations/db.ts";
+import { findNearest, jaccard } from "../src/orchestrator/dedupe.ts";
 import { SessionSchema, type Session } from "../src/types.ts";
 import { type Engine } from "../src/tools/registry.ts";
 import { SessionCache } from "../src/util/cache.ts";
@@ -147,7 +149,15 @@ const allNarrations = await readFile(cachePath, "utf8")
 const db = new FindingsDB();
 // Skip sessions already extracted so reruns don't duplicate findings.
 const alreadyExtracted = new Set(db.list().flatMap((f) => f.sessionIds));
+// Same dedup as the real ingest path (scripts/extract.ts): embed each finding
+// and merge near-duplicates so the prioritizer sees distinct findings with
+// occurrence counts — the batch shape it was trained on. Embeddings come from
+// local Ollama; when unavailable, fall back to lexical jaccard so the demo
+// still needs no extra dependency.
+const embedder = new Embedder();
+const JACCARD_THRESHOLD = 0.55;
 let totalFindings = 0;
+let merged = 0;
 let skipped = 0;
 for (const n of allNarrations) {
   if (alreadyExtracted.has(n.sessionId)) {
@@ -157,12 +167,38 @@ for (const n of allNarrations) {
   const r = await dispatchExtractor(n.narration, args.engine);
   totalFindings += r.output.findings.length;
   for (const f of r.output.findings) {
-    db.insert(f, n.sessionId);
-    console.log(`  [${f.kind} sev=${f.severity}] ${f.title}`);
+    const text = `${f.title}\n${f.evidence}`;
+    let emb: number[] | undefined;
+    try {
+      emb = await embedder.embed(text);
+    } catch {
+      // no embedding model available; jaccard fallback below
+    }
+    let nearestId: string | null = null;
+    if (emb) {
+      nearestId = findNearest(emb, db.candidates(), 0.85)?.id ?? null;
+    } else {
+      let best = 0;
+      for (const existing of db.list()) {
+        const score = jaccard(text, `${existing.title}\n${existing.evidence}`);
+        if (score >= JACCARD_THRESHOLD && score > best) {
+          best = score;
+          nearestId = existing.id;
+        }
+      }
+    }
+    if (nearestId) {
+      db.mergeOccurrence(nearestId, n.sessionId, f.severity);
+      merged++;
+      console.log(`  [${f.kind} sev=${f.severity}] ${f.title} (merged as duplicate evidence)`);
+    } else {
+      db.insert(f, n.sessionId, emb);
+      console.log(`  [${f.kind} sev=${f.severity}] ${f.title}`);
+    }
   }
 }
 if (skipped > 0) console.log(`  (skipped ${skipped} sessions already in the findings DB)`);
-console.log(`  Extracted ${totalFindings} findings (dedup skipped in demo for clarity).`);
+console.log(`  Extracted ${totalFindings} findings, ${merged} merged as duplicate evidence.`);
 
 console.log(`\n-- Stage 3: prioritize`);
 const findings = db.list();

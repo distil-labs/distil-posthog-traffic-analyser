@@ -113,6 +113,38 @@ After distillation, run the eval to confirm the student matches the teacher:
 bun run eval --sample 20
 ```
 
+## Measured results (models trained from the committed seeds)
+
+We ran the full loop on this repo's own seed data: uploaded `examples/seeds/`
+to the Distil Labs platform, trained one student per tool (Qwen3-0.6B for the
+narrator, Qwen3-1.7B for extractor and prioritizer), converted the returned
+weights to GGUF, and ran everything through Ollama on a laptop.
+
+**Before vs after training** — same held-out test set, scored by an LLM judge
+on the platform:
+
+| Tool | Student | Untrained base | After training |
+| --- | --- | --- | --- |
+| narrator | Qwen3-0.6B | **0%** | **100%** |
+| extractor | Qwen3-1.7B | 40% | 80% |
+| prioritizer | Qwen3-1.7B | 75%* | 75%* |
+
+\* the prioritizer judge fails an answer outright on any coverage violation;
+live testing is the sharper lens: the untrained base drops or duplicates ids
+on novel batches, the trained student ranked every batch we threw at it —
+including adversarial near-duplicate batches — with exact coverage.
+
+The untrained narrator base isn't just imprecise, it breaks the contract:
+across our live runs it violated the 3-sentence format on roughly a third of
+sessions and invented facts ("successfully logged in" on a failed
+password-reset session). The trained 0.6B student held the format on 10/10
+sessions, twice, citing real queries, buttons, and error codes.
+
+**Student vs frontier teacher** (`bun run eval`, gpt-5-mini as teacher and
+judge, 5 demo narrations): 3 ties, 1 student win, 1 teacher win — at
+**$0.00 inference cost** for the student side; the whole three-tool demo runs
+end-to-end for `Total USD: $0.000000`.
+
 ---
 
 ## Every script

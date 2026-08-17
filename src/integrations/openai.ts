@@ -37,13 +37,16 @@ export class OpenAIClient implements Completer {
     const agent = opts.agent ?? "llm";
     log.debug("openai_call", { model: this.model, agent, chars: prompt.length });
 
+    // gpt-5 family and o-series reasoning models reject sampler params;
+    // only send temperature to models that accept it (vLLM, gpt-4o, ...).
+    const supportsTemperature = !/^(gpt-5|o\d)/.test(this.model);
     const resp = await retry(() =>
       this.client.responses.create({
         model: this.model,
         instructions: opts.system,
         input: prompt,
         max_output_tokens: opts.maxTokens ?? 4096,
-        temperature: opts.temperature ?? 0.2,
+        ...(supportsTemperature ? { temperature: opts.temperature ?? 0.2 } : {}),
       }),
     );
 

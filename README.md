@@ -129,10 +129,12 @@ on the platform:
 | extractor | Qwen3-1.7B | 40% | 80% |
 | prioritizer | Qwen3-1.7B | 75%* | 75%* |
 
-\* the prioritizer judge fails an answer outright on any coverage violation;
-live testing is the sharper lens: the untrained base drops or duplicates ids
-on novel batches, the trained student ranked every batch we threw at it —
-including adversarial near-duplicate batches — with exact coverage.
+\* the prioritizer judge fails an answer outright on any coverage violation,
+so both scores sit at its strict format bar; live testing is the sharper
+lens: a first-pass 0.6B student dropped an id when a batch contained
+near-duplicate findings, while the shipping 1.7B student ranked every batch
+we threw at it — including that adversarial near-duplicate batch — with
+exact coverage.
 
 The untrained narrator base isn't just imprecise, it breaks the contract:
 across our live runs it violated the 3-sentence format on roughly a third of

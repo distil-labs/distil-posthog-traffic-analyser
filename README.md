@@ -120,14 +120,20 @@ to the Distil Labs platform, trained one student per tool (Qwen3-0.6B for the
 narrator, Qwen3-1.7B for extractor and prioritizer), converted the returned
 weights to GGUF, and ran everything through Ollama on a laptop.
 
-**Before vs after training** — same held-out test set, scored by an LLM judge
-on the platform:
+All three trained models are published and ready to pull:
 
-| Tool | Student | Untrained base | After training |
+- [distil-qwen3-0.6b-posthog-narrator](https://huggingface.co/distil-labs/distil-qwen3-0.6b-posthog-narrator)
+- [distil-qwen3-1.7b-posthog-extractor](https://huggingface.co/distil-labs/distil-qwen3-1.7b-posthog-extractor)
+- [distil-qwen3-1.7b-posthog-prioritizer](https://huggingface.co/distil-labs/distil-qwen3-1.7b-posthog-prioritizer)
+
+**Untrained student vs teacher vs tuned student** — same held-out test set,
+scored by an LLM judge on the platform (ROUGE in parentheses):
+
+| Tool | Untrained student | Teacher (gpt-oss-120b) | Tuned student |
 | --- | --- | --- | --- |
-| narrator | Qwen3-0.6B | **0%** | **100%** |
-| extractor | Qwen3-1.7B | 40% | 80% |
-| prioritizer | Qwen3-1.7B | 75%* | 75%* |
+| narrator (Qwen3-0.6B) | **0%** (39.2) | 100% (62.1) | **100%** (64.0) |
+| extractor (Qwen3-1.7B) | 40% (60.3) | 80% (67.6) | **80%** (68.9) |
+| prioritizer (Qwen3-1.7B) | 75%* (39.0) | 75%* (47.2) | 75%* (50.3) |
 
 \* the prioritizer judge fails an answer outright on any coverage violation,
 so both scores sit at its strict format bar; live testing is the sharper

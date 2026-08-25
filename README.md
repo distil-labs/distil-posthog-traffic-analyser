@@ -127,13 +127,15 @@ All three trained models are published and ready to pull:
 - [distil-qwen3-1.7b-posthog-prioritizer](https://huggingface.co/distil-labs/distil-qwen3-1.7b-posthog-prioritizer)
 
 **Untrained student vs teacher vs tuned student** — same held-out test set,
-scored by an LLM judge on the platform (ROUGE in parentheses):
+scored by an LLM judge on the platform. Cells are judge passes out of the
+held-out n (test sets are small: 5, 5, and 4 examples — hence the live
+testing below), with ROUGE in parentheses:
 
 | Tool | Untrained student | Teacher (gpt-oss-120b) | Tuned student |
 | --- | --- | --- | --- |
-| narrator (Qwen3-0.6B) | **0%** (39.2) | 100% (62.1) | **100%** (64.0) |
-| extractor (Qwen3-1.7B) | 40% (60.3) | 80% (67.6) | **80%** (68.9) |
-| prioritizer (Qwen3-1.7B) | 75%* (39.0) | 75%* (47.2) | 75%* (50.3) |
+| narrator (Qwen3-0.6B, n=5) | **0/5** (39.2) | 5/5 (62.1) | **5/5** (64.0) |
+| extractor (Qwen3-1.7B, n=5) | 2/5 (60.3) | 4/5 (67.6) | **4/5** (68.9) |
+| prioritizer (Qwen3-1.7B, n=4) | 3/4* (39.0) | 3/4* (47.2) | 3/4* (50.3) |
 
 \* the prioritizer judge fails an answer outright on any coverage violation,
 so both scores sit at its strict format bar; live testing is the sharper
@@ -148,10 +150,10 @@ sessions and invented facts ("successfully logged in" on a failed
 password-reset session). The trained 0.6B student held the format on 10/10
 sessions, twice, citing real queries, buttons, and error codes.
 
-**Student vs frontier teacher** (`bun run eval`, gpt-5-mini as teacher and
-judge, 5 demo narrations): 3 ties, 1 student win, 1 teacher win — at
-**$0.00 inference cost** for the student side; the whole three-tool demo runs
-end-to-end for `Total USD: $0.000000`.
+**Student vs frontier teacher** (`bun run eval`, which scores the extractor;
+gpt-5-mini as teacher and judge, 5 demo narrations): 3 ties, 1 student win,
+1 teacher win — at **$0.00 inference cost** for the student side; the whole
+three-tool demo runs end-to-end for `Total USD: $0.000000`.
 
 ---
 
